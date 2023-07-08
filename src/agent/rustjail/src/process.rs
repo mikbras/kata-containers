@@ -141,6 +141,7 @@ impl Process {
                 p.stdout = Some(std::io::stdout().as_raw_fd());
                 p.stderr = Some(std::io::stderr().as_raw_fd());
             } else {
+
                 info!(logger, "created console socket!");
 
                 let (stdin, pstdin) = unistd::pipe2(OFlag::O_CLOEXEC)?;

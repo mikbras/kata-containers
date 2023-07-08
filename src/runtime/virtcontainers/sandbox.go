@@ -303,8 +303,10 @@ func (s *Sandbox) GetHypervisorPid() (int, error) {
 	if len(pids) == 0 || pids[0] == 0 {
 		return -1, fmt.Errorf("Invalid hypervisor PID: %+v", pids)
 	}
-
 	return pids[0], nil
+/* MEB:
+        return 99999, nil
+*/
 }
 
 // GetAllContainers returns all containers.
@@ -502,6 +504,8 @@ func createSandbox(ctx context.Context, sandboxConfig SandboxConfig, factory Fac
 		return nil, err
 	}
 
+        s.Logger().Infof("MEB: createSandbox() begin");
+
 	if len(s.config.Experimental) != 0 {
 		s.Logger().WithField("features", s.config.Experimental).Infof("Enable experimental features")
 	}
@@ -529,6 +533,8 @@ func createSandbox(ctx context.Context, sandboxConfig SandboxConfig, factory Fac
 	if err := s.setSandboxState(types.StateReady); err != nil {
 		return nil, err
 	}
+
+        s.Logger().Infof("MEB: createSandbox() done");
 
 	return s, nil
 }
@@ -573,6 +579,8 @@ func newSandbox(ctx context.Context, sandboxConfig SandboxConfig, factory Factor
 		swapSizeBytes:   0,
 		swapDevices:     []*config.BlockDrive{},
 	}
+
+	s.Logger().Infof("MEB: sandbox created")
 
 	fsShare, err := NewFilesystemShare(s)
 	if err != nil {
@@ -624,6 +632,8 @@ func newSandbox(ctx context.Context, sandboxConfig SandboxConfig, factory Factor
 	if s.disableVMShutdown, err = s.agent.init(ctx, s, sandboxConfig.AgentConfig); err != nil {
 		return nil, err
 	}
+
+	s.Logger().Infof("MEB: end newSandbox")
 
 	return s, nil
 }
@@ -1206,7 +1216,9 @@ func (s *Sandbox) startVM(ctx context.Context, prestartHookFunc func(context.Con
 
 	s.Logger().Info("Starting VM")
 
+/* MEB: prevent creation of console watcher
 	if s.config.HypervisorConfig.Debug {
+
 		// create console watcher
 		consoleWatcher, err := newConsoleWatcher(ctx, s)
 		if err != nil {
@@ -1214,6 +1226,7 @@ func (s *Sandbox) startVM(ctx context.Context, prestartHookFunc func(context.Con
 		}
 		s.cw = consoleWatcher
 	}
+*/
 
 	defer func() {
 		if err != nil {
@@ -1221,6 +1234,7 @@ func (s *Sandbox) startVM(ctx context.Context, prestartHookFunc func(context.Con
 		}
 	}()
 
+s.Logger().Info("MEB: XXX: TEST1")
 	if err := s.network.Run(ctx, func() error {
 		if s.factory != nil {
 			vm, err := s.factory.GetVM(ctx, VMConfig{
@@ -1239,7 +1253,9 @@ func (s *Sandbox) startVM(ctx context.Context, prestartHookFunc func(context.Con
 	}); err != nil {
 		return err
 	}
+s.Logger().Info("MEB: XXX: TEST2")
 
+/* MEB: UNDO
 	if prestartHookFunc != nil {
 		hid, err := s.GetHypervisorPid()
 		if err != nil {
@@ -1252,6 +1268,9 @@ func (s *Sandbox) startVM(ctx context.Context, prestartHookFunc func(context.Con
 			return err
 		}
 	}
+*/
+
+s.Logger().Info("MEB: XXX: TEST3")
 
 	// 1. Do not scan the netns if we want no network for the vmm.
 	// 2. In case of vm factory, scan the netns to hotplug interfaces after vm is started.
@@ -1264,6 +1283,7 @@ func (s *Sandbox) startVM(ctx context.Context, prestartHookFunc func(context.Con
 	}
 
 	s.Logger().Info("VM started")
+s.Logger().Info("MEB: XXX: TEST4")
 
 	if s.cw != nil {
 		s.Logger().Debug("console watcher starts")
@@ -1273,6 +1293,8 @@ func (s *Sandbox) startVM(ctx context.Context, prestartHookFunc func(context.Con
 		}
 	}
 
+s.Logger().Info("MEB: XXX: TEST5")
+
 	// Once the hypervisor is done starting the sandbox,
 	// we want to guarantee that it is manageable.
 	// For that we need to ask the agent to start the
@@ -1280,6 +1302,8 @@ func (s *Sandbox) startVM(ctx context.Context, prestartHookFunc func(context.Con
 	if err := s.agent.startSandbox(ctx, s); err != nil {
 		return err
 	}
+
+s.Logger().Info("MEB: XXX: TEST6")
 
 	s.Logger().Info("Agent started in the sandbox")
 
@@ -1446,6 +1470,9 @@ func (s *Sandbox) KillContainer(ctx context.Context, containerID string, signal 
 	if err != nil {
 		return err
 	}
+
+        // MEB: +1
+        // signal = syscall.SIGTERM
 
 	// Send a signal to the process.
 	err = c.kill(ctx, signal, all)
@@ -2009,6 +2036,8 @@ func (s *Sandbox) AddDevice(ctx context.Context, info config.DeviceInfo) (api.De
 // If changes in memory or CPU are made, the VM will be updated and the agent will online the
 // applicable CPU and memory.
 func (s *Sandbox) updateResources(ctx context.Context) error {
+
+/* MEB: ignore updateResources() to prevent call into QMP:
 	if s == nil {
 		return errors.New("sandbox is nil")
 	}
@@ -2111,7 +2140,7 @@ func (s *Sandbox) updateResources(ctx context.Context) error {
 		}
 
 	}
-
+*/
 	return nil
 
 }
@@ -2469,11 +2498,15 @@ func fetchSandbox(ctx context.Context, sandboxID string) (sandbox *Sandbox, err 
 		return nil, fmt.Errorf("failed to create sandbox with config %+v: %v", config, err)
 	}
 
+        sandbox.Logger().Infof("MEB: fetchContainers() created");
+
 	// This sandbox already exists, we don't need to recreate the containers in the guest.
 	// We only need to fetch the containers from storage and create the container structs.
 	if err := sandbox.fetchContainers(ctx); err != nil {
 		return nil, err
 	}
+
+        sandbox.Logger().Infof("MEB: fetchContainers() done");
 
 	return sandbox, nil
 }

@@ -55,6 +55,8 @@ pub async fn debug_console_handler(
 
     let shells = SHELLS.lock().unwrap().to_vec();
 
+    info!(logger, "xxx: debug_console_handler");
+
     let shell = shells
         .into_iter()
         .find(|sh| PathBuf::from(sh).exists())
@@ -203,6 +205,8 @@ async fn run_debug_console_vsock<T: AsyncRead + AsyncWrite>(
     let _ = fcntl::fcntl(pseudo.slave, FcntlArg::F_SETFD(FdFlag::FD_CLOEXEC));
 
     let slave_fd = pseudo.slave;
+
+    info!(logger, "xxx: slave_fd: {}", slave_fd);
 
     match unsafe { fork() } {
         Ok(ForkResult::Child) => run_in_child(slave_fd, shell),

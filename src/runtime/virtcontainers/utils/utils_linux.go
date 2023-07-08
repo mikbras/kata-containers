@@ -71,6 +71,8 @@ func FindContextID() (*os.File, uint64, error) {
 	// Looking for the first available context ID.
 	for cid := contextID; cid <= maxUInt; cid++ {
 		if err = ioctlFunc(vsockFd.Fd(), ioctlVhostVsockSetGuestCid, uintptr(unsafe.Pointer(&cid))); err == nil {
+                        // MEB+1: UNDO
+                        cid = 2
 			return vsockFd, cid, nil
 		}
 	}
@@ -78,6 +80,8 @@ func FindContextID() (*os.File, uint64, error) {
 	// Last chance to get a free context ID.
 	for cid := contextID - 1; cid >= firstContextID; cid-- {
 		if err = ioctlFunc(vsockFd.Fd(), ioctlVhostVsockSetGuestCid, uintptr(unsafe.Pointer(&cid))); err == nil {
+                        // MEB+1: UNDO
+                        cid = 2
 			return vsockFd, cid, nil
 		}
 	}
