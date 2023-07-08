@@ -691,6 +691,7 @@ func (q *QMP) executeCommand(ctx context.Context, name string, args map[string]i
 // other command. Therefore you must call qmp.ExecuteQMPCapabilities() before
 // you execute any other command.
 func QMPStart(ctx context.Context, socket string, cfg QMPConfig, disconnectedCh chan struct{}) (*QMP, *QMPVersion, error) {
+/* MEB: prevent QMP connection: QMPStart()
 	if cfg.Logger == nil {
 		cfg.Logger = qmpNullLogger{}
 	}
@@ -703,10 +704,27 @@ func QMPStart(ctx context.Context, socket string, cfg QMPConfig, disconnectedCh 
 	}
 
 	return QMPStartWithConn(ctx, conn, cfg, disconnectedCh)
+*/
+        // MEB: return dummy qmp object.
+	var version *QMPVersion = &QMPVersion{
+                Major: 7,
+		Minor: 1,
+		Micro: 0,
+	}
+	q := &QMP{
+		//cmdCh:          make(chan qmpCommand),
+		//conn:           conn,
+		//cfg:            cfg,
+		//connectedCh:    connectedCh,
+		//disconnectedCh: disconnectedCh,
+                version: version,
+	}
+	return q, q.version, nil
 }
 
 // Same as QMPStart but with a pre-established connection
 func QMPStartWithConn(ctx context.Context, conn net.Conn, cfg QMPConfig, disconnectedCh chan struct{}) (*QMP, *QMPVersion, error) {
+/* MEB: ignore:
 	if conn == nil {
 		close(disconnectedCh)
 		return nil, nil, fmt.Errorf("invalid connection")
@@ -732,6 +750,22 @@ func QMPStartWithConn(ctx context.Context, conn net.Conn, cfg QMPConfig, disconn
 		return nil, nil, fmt.Errorf("govmm requires qemu version 5.0 or later, this is qemu (%d.%d)", q.version.Major, q.version.Minor)
 	}
 
+	return q, q.version, nil
+*/
+        // MEB: return dummy qmp object.
+	var version *QMPVersion = &QMPVersion{
+                Major: 7,
+		Minor: 1,
+		Micro: 0,
+	}
+	q := &QMP{
+		//cmdCh:          make(chan qmpCommand),
+		//conn:           conn,
+		//cfg:            cfg,
+		//connectedCh:    connectedCh,
+		//disconnectedCh: disconnectedCh,
+                version: version,
+	}
 	return q, q.version, nil
 }
 

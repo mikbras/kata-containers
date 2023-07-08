@@ -36,6 +36,7 @@ use crate::{ccw, device::get_virtio_blk_ccw_device_name};
 use anyhow::{anyhow, Context, Result};
 use slog::Logger;
 use tracing::instrument;
+use std::process::Command;
 
 pub const TYPE_ROOTFS: &str = "rootfs";
 const SYS_FS_HUGEPAGES_PREFIX: &str = "/sys/kernel/mm/hugepages";
@@ -420,6 +421,9 @@ async fn virtiofs_storage_handler(
     storage: &Storage,
     _sandbox: Arc<Mutex<Sandbox>>,
 ) -> Result<String> {
+
+    info!(logger, "MIKBRAS: virtiofs_storage_handler()");
+
     common_storage_handler(logger, storage)
 }
 
@@ -572,14 +576,40 @@ fn mount_storage(logger: &Logger, storage: &Storage) -> Result<()> {
     "mount-options" => options.as_str(),
     );
 
-    baremount(
-        source,
-        mount_path,
-        storage.fstype.as_str(),
-        flags,
-        options.as_str(),
-        &logger,
-    )
+    /* MEB: use vsockfs for kataShared mount */
+    if source.to_str().unwrap() == "kataShared" {
+
+        info!(logger, "MEB: mounting kataShared with vsocks: MEB");
+
+        let output = Command::new("/sbin/mount.vsockfs")
+            .arg("vsock:7777")
+            .arg(mount_path.to_str().unwrap())
+            .output()
+            .expect("failed to execute process");
+
+        info!(logger, "MEB: mount.vsockfs status: {}", output.status);
+        info!(logger, "MEB: mount.vsockfs stdout: {}",
+            String::from_utf8_lossy(&output.stdout));
+        info!(logger, "MEB: mount.vsockfs stderr: {}",
+            String::from_utf8_lossy(&output.stderr));
+
+        Ok(())
+
+    } else if source.to_str().unwrap() == "shm" {
+
+        info!(logger, "MEB: skipping shm mount: MEB");
+        Ok(())
+
+    } else {
+        baremount(
+            source,
+            mount_path,
+            storage.fstype.as_str(),
+            flags,
+            options.as_str(),
+            &logger,
+        )
+    }
 }
 
 #[instrument]

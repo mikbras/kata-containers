@@ -402,20 +402,25 @@ func (q *qemu) createQmpSocket() ([]govmmQemu.QMPSocket, error) {
 
 func (q *qemu) buildDevices(ctx context.Context, initrdPath string) ([]govmmQemu.Device, *govmmQemu.IOThread, error) {
 	var devices []govmmQemu.Device
+        var err error
 
+/* MEB: prevent creation of VM console
 	_, console, err := q.GetVMConsole(ctx, q.id)
 	if err != nil {
 		return nil, nil, err
 	}
+*/
 
 	// Add bridges before any other devices. This way we make sure that
 	// bridge gets the first available PCI address i.e bridgePCIStartAddr
 	devices = q.arch.appendBridges(devices)
 
+/* MEB: prevent creation of VM console
 	devices, err = q.arch.appendConsole(ctx, devices, console)
 	if err != nil {
 		return nil, nil, err
 	}
+*/
 
 	if initrdPath == "" {
 		devices, err = q.appendImage(ctx, devices)
@@ -488,6 +493,7 @@ func (q *qemu) setConfig(config *HypervisorConfig) error {
 
 func (q *qemu) createVirtiofsDaemon(sharedPath string) (VirtiofsDaemon, error) {
 	virtiofsdSocketPath, err := q.vhostFSSocketPath(q.id)
+
 	if err != nil {
 		return nil, err
 	}
@@ -742,6 +748,7 @@ func (q *qemu) nydusdAPISocketPath(id string) (string, error) {
 }
 
 func (q *qemu) setupVirtiofsDaemon(ctx context.Context) (err error) {
+/* MEB: prevent virtiofs daemin from running:
 	pid, err := q.virtiofsDaemon.Start(ctx, func() {
 		q.StopVM(ctx, false)
 	})
@@ -749,7 +756,7 @@ func (q *qemu) setupVirtiofsDaemon(ctx context.Context) (err error) {
 		return err
 	}
 	q.state.VirtiofsDaemonPid = pid
-
+*/
 	return nil
 }
 
@@ -808,6 +815,7 @@ func (q *qemu) setupVirtioMem(ctx context.Context) error {
 		return err
 	}
 
+        q.Logger().Infof("MEB: qmpSetup15");
 	if err = q.qmpSetup(); err != nil {
 		return err
 	}
@@ -949,11 +957,15 @@ func (q *qemu) StartVM(ctx context.Context, timeout int) error {
 		}
 	}()
 
+        /* MEB: creates QMP connection */
+        q.Logger().Infof("MEB: setupEarlyQmpConnection()");
+/*
 	var qmpConn net.Conn
 	qmpConn, err = q.setupEarlyQmpConnection()
 	if err != nil {
 		return err
 	}
+*/
 
 	// This needs to be done as late as possible, just before launching
 	// virtiofsd are executed by kata-runtime after this call, run with
@@ -996,10 +1008,13 @@ func (q *qemu) StartVM(ctx context.Context, timeout int) error {
 		go q.LogAndWait(qemuCmd, reader)
 	}
 
+/* MEB: do not ask QEMU if it is running!
 	err = q.waitVM(ctx, qmpConn, timeout)
 	if err != nil {
 		return err
 	}
+*/
+        time.Sleep(10 * time.Second)
 
 	if q.config.BootFromTemplate {
 		if err = q.bootFromTemplate(); err != nil {
@@ -1015,6 +1030,7 @@ func (q *qemu) StartVM(ctx context.Context, timeout int) error {
 }
 
 func (q *qemu) bootFromTemplate() error {
+        q.Logger().Infof("MEB: qmpSetup14");
 	if err := q.qmpSetup(); err != nil {
 		return err
 	}
@@ -1054,7 +1070,9 @@ func (q *qemu) waitVM(ctx context.Context, qmpConn net.Conn, timeout int) error 
 	timeStart := time.Now()
 	for {
 		disconnectCh = make(chan struct{})
+                q.Logger().Infof("MEB: QMPStart1: before");
 		qmp, ver, err = govmmQemu.QMPStartWithConn(q.qmpMonitorCh.ctx, qmpConn, cfg, disconnectCh)
+                q.Logger().Infof("MEB: QMPStart1: after");
 		if err == nil {
 			break
 		}
@@ -1076,16 +1094,20 @@ func (q *qemu) waitVM(ctx context.Context, qmpConn net.Conn, timeout int) error 
 		"qmp-Capabilities":  strings.Join(ver.Capabilities, ","),
 	}).Infof("QMP details")
 
+/*
 	if err = q.qmpMonitorCh.qmp.ExecuteQMPCapabilities(q.qmpMonitorCh.ctx); err != nil {
 		q.Logger().WithError(err).Error(qmpCapErrMsg)
 		return err
 	}
+*/
 
 	return nil
 }
 
 // StopVM will stop the Sandbox's VM.
 func (q *qemu) StopVM(ctx context.Context, waitOnly bool) (err error) {
+/* MEB: ignore StopVM() to prevent call into QMP:
+
 	q.mu.Lock()
 	defer q.mu.Unlock()
 	span, _ := katatrace.Trace(ctx, q.Logger(), "StopVM", qemuTracingTags, map[string]string{"sandbox_id": q.id})
@@ -1104,6 +1126,7 @@ func (q *qemu) StopVM(ctx context.Context, waitOnly bool) (err error) {
 		}
 	}()
 
+        q.Logger().Infof("MEB: qmpSetup13: StopVM()");
 	if err := q.qmpSetup(); err != nil {
 		return err
 	}
@@ -1133,7 +1156,7 @@ func (q *qemu) StopVM(ctx context.Context, waitOnly bool) (err error) {
 			return err
 		}
 	}
-
+*/
 	return nil
 }
 
@@ -1198,6 +1221,7 @@ func (q *qemu) togglePauseSandbox(ctx context.Context, pause bool) error {
 	span, _ := katatrace.Trace(ctx, q.Logger(), "togglePauseSandbox", qemuTracingTags, map[string]string{"sandbox_id": q.id})
 	defer span.End()
 
+        q.Logger().Infof("MEB: qmpSetup12");
 	if err := q.qmpSetup(); err != nil {
 		return err
 	}
@@ -1227,6 +1251,7 @@ func (q *qemu) qmpSetup() error {
 	// Auto-closed by QMPStart().
 	disconnectCh := make(chan struct{})
 
+        q.Logger().Infof("MEB: QMPStart2");
 	qmp, _, err := govmmQemu.QMPStart(q.qmpMonitorCh.ctx, q.qmpMonitorCh.path, cfg, disconnectCh)
 	if err != nil {
 		q.Logger().WithError(err).Error("Failed to connect to QEMU instance")
@@ -1354,6 +1379,7 @@ func (q *qemu) dumpGuestMemory(dumpSavePath string) error {
 	protocol := fmt.Sprintf("file:%s/vmcore-%s.%s", dumpSavePath, time.Now().Format("20060102150405.999"), memoryDumpFormat)
 	q.Logger().Infof("try to dump guest memory to %s", protocol)
 
+        q.Logger().Infof("MEB: qmpSetup11");
 	if err := q.qmpSetup(); err != nil {
 		q.Logger().WithError(err).Error("setup manage QMP failed")
 		return err
@@ -1591,6 +1617,7 @@ func (q *qemu) hotplugAddVhostUserBlkDevice(ctx context.Context, vAttr *config.V
 }
 
 func (q *qemu) hotplugBlockDevice(ctx context.Context, drive *config.BlockDrive, op Operation) error {
+        q.Logger().Infof("MEB: qmpSetup10");
 	if err := q.qmpSetup(); err != nil {
 		return err
 	}
@@ -1614,6 +1641,7 @@ func (q *qemu) hotplugBlockDevice(ctx context.Context, drive *config.BlockDrive,
 }
 
 func (q *qemu) hotplugVhostUserDevice(ctx context.Context, vAttr *config.VhostUserDeviceAttrs, op Operation) error {
+        q.Logger().Infof("MEB: qmpSetup9");
 	if err := q.qmpSetup(); err != nil {
 		return err
 	}
@@ -1709,6 +1737,7 @@ func (q *qemu) qomGetPciPath(qemuID string) (types.PciPath, error) {
 }
 
 func (q *qemu) hotplugVFIODevice(ctx context.Context, device *config.VFIODev, op Operation) (err error) {
+        q.Logger().Infof("MEB: qmpSetup8");
 	if err = q.qmpSetup(); err != nil {
 		return err
 	}
@@ -1827,6 +1856,8 @@ func (q *qemu) hotAddNetDevice(name, hardAddr string, VMFds, VhostFds []*os.File
 }
 
 func (q *qemu) hotplugNetDevice(ctx context.Context, endpoint Endpoint, op Operation) (err error) {
+/* MEB: ignore hotplugNetDevice() to prevent call into QMP:
+        q.Logger().Infof("MEB: qmpSetup7: hotplugNetDevice()");
 	if err = q.qmpSetup(); err != nil {
 		return err
 	}
@@ -1899,6 +1930,8 @@ func (q *qemu) hotplugNetDevice(ctx context.Context, endpoint Endpoint, op Opera
 	}
 
 	return q.qmpMonitorCh.qmp.ExecuteNetdevDel(q.qmpMonitorCh.ctx, tap.Name)
+*/
+        return nil
 }
 
 func (q *qemu) hotplugDevice(ctx context.Context, devInfo interface{}, devType DeviceType, op Operation) (interface{}, error) {
@@ -1958,6 +1991,7 @@ func (q *qemu) hotplugCPUs(vcpus uint32, op Operation) (uint32, error) {
 		return 0, nil
 	}
 
+        q.Logger().Infof("MEB: qmpSetup6");
 	if err := q.qmpSetup(); err != nil {
 		return 0, err
 	}
@@ -2069,6 +2103,7 @@ func (q *qemu) hotplugMemory(memDev *MemoryDevice, op Operation) (int, error) {
 	memLog := q.Logger().WithField("hotplug", "memory")
 
 	memLog.WithField("hotplug-memory-mb", memDev.SizeMB).Debug("requested memory hotplug")
+        q.Logger().Infof("MEB: qmpSetup5");
 	if err := q.qmpSetup(); err != nil {
 		return 0, err
 	}
@@ -2199,6 +2234,7 @@ func (q *qemu) AddDevice(ctx context.Context, devInfo interface{}, devType Devic
 		q.qemuConfig.Devices = q.arch.appendSocket(q.qemuConfig.Devices, v)
 	case types.VSock:
 		q.fds = append(q.fds, v.VhostFd)
+                q.Logger().Infof("MEB: VHOSTFD...")
 		q.qemuConfig.Devices, err = q.arch.appendVSock(ctx, q.qemuConfig.Devices, v)
 	case Endpoint:
 		q.qemuConfig.Devices, err = q.arch.appendNetwork(ctx, q.qemuConfig.Devices, v)
@@ -2232,6 +2268,7 @@ func (q *qemu) GetVMConsole(ctx context.Context, id string) (string, string, err
 func (q *qemu) SaveVM() error {
 	q.Logger().Info("Save sandbox")
 
+        q.Logger().Infof("MEB: qmpSetup4");
 	if err := q.qmpSetup(); err != nil {
 		return err
 	}
@@ -2307,6 +2344,7 @@ func (q *qemu) GetTotalMemoryMB(ctx context.Context) uint32 {
 func (q *qemu) ResizeMemory(ctx context.Context, reqMemMB uint32, memoryBlockSizeMB uint32, probe bool) (uint32, MemoryDevice, error) {
 
 	currentMemory := q.GetTotalMemoryMB(ctx)
+        q.Logger().Infof("MEB: qmpSetup3: ResizeMemory()");
 	if err := q.qmpSetup(); err != nil {
 		return 0, MemoryDevice{}, err
 	}
@@ -2513,10 +2551,13 @@ func genericAppendPCIeRootPort(devices []govmmQemu.Device, number uint32, machin
 }
 
 func (q *qemu) GetThreadIDs(ctx context.Context) (VcpuThreadIDs, error) {
+
+/* MEB: prevent GetThreadIDs() from calling into QMP
 	span, _ := katatrace.Trace(ctx, q.Logger(), "GetThreadIDs", qemuTracingTags, map[string]string{"sandbox_id": q.id})
 	defer span.End()
 
 	tid := VcpuThreadIDs{}
+        q.Logger().Infof("MEB: qmpSetup2: GetThreadIDs()");
 	if err := q.qmpSetup(); err != nil {
 		return tid, err
 	}
@@ -2534,6 +2575,11 @@ func (q *qemu) GetThreadIDs(ctx context.Context) (VcpuThreadIDs, error) {
 		}
 	}
 	return tid, nil
+*/
+        // MEB:
+        tid := VcpuThreadIDs{}
+        var err error = nil
+        return tid, err
 }
 
 func calcHotplugMemMiBSize(mem uint32, memorySectionSizeMB uint32) (uint32, error) {
@@ -2725,6 +2771,7 @@ func (q *qemu) Load(s hv.HypervisorState) {
 }
 
 func (q *qemu) Check() error {
+/* MEB: ignore to prevent call into QMP:
 	if atomic.LoadInt32(&q.stopped) != 0 {
 		return fmt.Errorf("qemu is not running")
 	}
@@ -2732,6 +2779,7 @@ func (q *qemu) Check() error {
 	q.memoryDumpFlag.Lock()
 	defer q.memoryDumpFlag.Unlock()
 
+        q.Logger().Infof("MEB: qmpSetup1: Check()");
 	if err := q.qmpSetup(); err != nil {
 		return err
 	}
@@ -2745,6 +2793,7 @@ func (q *qemu) Check() error {
 		return errors.Errorf("guest failure: %s", status.Status)
 	}
 
+*/
 	return nil
 }
 
