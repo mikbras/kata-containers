@@ -2732,8 +2732,6 @@ func (config *Config) appendDevices(logger QMPLog) {
 		logger = qmpNullLogger{}
 	}
 
-        logger.Infof("MEB: appendDevices()");
-
 	for _, d := range config.Devices {
 		if !d.Valid() {
 			logger.Errorf("vm device is not valid: %+v", config.Devices)

@@ -404,22 +404,26 @@ func (q *qemu) buildDevices(ctx context.Context, initrdPath string) ([]govmmQemu
 	var devices []govmmQemu.Device
         var err error
 
-/* MEB: prevent creation of VM console
+/*
+** <<<<<<<< MEB: prevent creation of VM console
 	_, console, err := q.GetVMConsole(ctx, q.id)
 	if err != nil {
 		return nil, nil, err
 	}
+** >>>>>>>>
 */
 
 	// Add bridges before any other devices. This way we make sure that
 	// bridge gets the first available PCI address i.e bridgePCIStartAddr
 	devices = q.arch.appendBridges(devices)
 
-/* MEB: prevent creation of VM console
+/*
+** <<<<<<<< MEB: prevent creation of VM console
 	devices, err = q.arch.appendConsole(ctx, devices, console)
 	if err != nil {
 		return nil, nil, err
 	}
+** >>>>>>>>
 */
 
 	if initrdPath == "" {
@@ -748,7 +752,8 @@ func (q *qemu) nydusdAPISocketPath(id string) (string, error) {
 }
 
 func (q *qemu) setupVirtiofsDaemon(ctx context.Context) (err error) {
-/* MEB: prevent virtiofs daemin from running:
+/*
+** <<<<<<<< MEB: prevent virtiofs daemin from running:
 	pid, err := q.virtiofsDaemon.Start(ctx, func() {
 		q.StopVM(ctx, false)
 	})
@@ -756,6 +761,7 @@ func (q *qemu) setupVirtiofsDaemon(ctx context.Context) (err error) {
 		return err
 	}
 	q.state.VirtiofsDaemonPid = pid
+** >>>>>>>>
 */
 	return nil
 }
@@ -956,12 +962,14 @@ func (q *qemu) StartVM(ctx context.Context, timeout int) error {
 		}
 	}()
 
-/* MEB: do not create new QMP connection:
+/*
+** <<<<<<<< MEB: do not create new QMP connection:
 	var qmpConn net.Conn
 	qmpConn, err = q.setupEarlyQmpConnection()
 	if err != nil {
 		return err
 	}
+** >>>>>>>>
 */
 
 	// This needs to be done as late as possible, just before launching
@@ -1005,11 +1013,13 @@ func (q *qemu) StartVM(ctx context.Context, timeout int) error {
 		go q.LogAndWait(qemuCmd, reader)
 	}
 
-/* MEB: do not ask QEMU if it is running!
+/*
+** <<<<<<<< MEB: do not ask QEMU if it is running!
 	err = q.waitVM(ctx, qmpConn, timeout)
 	if err != nil {
 		return err
 	}
+** >>>>>>>>
 */
         time.Sleep(10 * time.Second)
 
@@ -1100,7 +1110,8 @@ func (q *qemu) waitVM(ctx context.Context, qmpConn net.Conn, timeout int) error 
 
 // StopVM will stop the Sandbox's VM.
 func (q *qemu) StopVM(ctx context.Context, waitOnly bool) (err error) {
-/* MEB: ignore StopVM() to prevent call into QMP:
+/*
+** <<<<<<<< MEB: ignore StopVM() to prevent call into QMP:
 
 	q.mu.Lock()
 	defer q.mu.Unlock()
@@ -1120,7 +1131,6 @@ func (q *qemu) StopVM(ctx context.Context, waitOnly bool) (err error) {
 		}
 	}()
 
-        q.Logger().Infof("MEB: qmpSetup13: StopVM()");
 	if err := q.qmpSetup(); err != nil {
 		return err
 	}
@@ -1150,6 +1160,7 @@ func (q *qemu) StopVM(ctx context.Context, waitOnly bool) (err error) {
 			return err
 		}
 	}
+** >>>>>>>>
 */
 	return nil
 }
@@ -1844,8 +1855,8 @@ func (q *qemu) hotAddNetDevice(name, hardAddr string, VMFds, VhostFds []*os.File
 }
 
 func (q *qemu) hotplugNetDevice(ctx context.Context, endpoint Endpoint, op Operation) (err error) {
-/* MEB: ignore hotplugNetDevice() to prevent call into QMP:
-        q.Logger().Infof("MEB: qmpSetup7: hotplugNetDevice()");
+/*
+** <<<<<<<< MEB: ignore hotplugNetDevice() to prevent call into QMP:
 	if err = q.qmpSetup(); err != nil {
 		return err
 	}
@@ -1918,6 +1929,7 @@ func (q *qemu) hotplugNetDevice(ctx context.Context, endpoint Endpoint, op Opera
 	}
 
 	return q.qmpMonitorCh.qmp.ExecuteNetdevDel(q.qmpMonitorCh.ctx, tap.Name)
+** >>>>>>>>
 */
         return nil
 }
@@ -2535,12 +2547,12 @@ func genericAppendPCIeRootPort(devices []govmmQemu.Device, number uint32, machin
 
 func (q *qemu) GetThreadIDs(ctx context.Context) (VcpuThreadIDs, error) {
 
-/* MEB: prevent GetThreadIDs() from calling into QMP
+/*
+** <<<<<<<< MEB: prevent GetThreadIDs() from calling into QMP
 	span, _ := katatrace.Trace(ctx, q.Logger(), "GetThreadIDs", qemuTracingTags, map[string]string{"sandbox_id": q.id})
 	defer span.End()
 
 	tid := VcpuThreadIDs{}
-        q.Logger().Infof("MEB: qmpSetup2: GetThreadIDs()");
 	if err := q.qmpSetup(); err != nil {
 		return tid, err
 	}
@@ -2558,8 +2570,8 @@ func (q *qemu) GetThreadIDs(ctx context.Context) (VcpuThreadIDs, error) {
 		}
 	}
 	return tid, nil
+** >>>>>>>>
 */
-        // MEB:
         tid := VcpuThreadIDs{}
         var err error = nil
         return tid, err
@@ -2754,7 +2766,8 @@ func (q *qemu) Load(s hv.HypervisorState) {
 }
 
 func (q *qemu) Check() error {
-/* MEB: ignore to prevent call into QMP:
+/*
+** <<<<<<<< MEB: ignore to prevent call into QMP:
 	if atomic.LoadInt32(&q.stopped) != 0 {
 		return fmt.Errorf("qemu is not running")
 	}
@@ -2762,7 +2775,6 @@ func (q *qemu) Check() error {
 	q.memoryDumpFlag.Lock()
 	defer q.memoryDumpFlag.Unlock()
 
-        q.Logger().Infof("MEB: qmpSetup1: Check()");
 	if err := q.qmpSetup(); err != nil {
 		return err
 	}
@@ -2775,7 +2787,7 @@ func (q *qemu) Check() error {
 	if status.Status == "internal-error" || status.Status == "guest-panicked" {
 		return errors.Errorf("guest failure: %s", status.Status)
 	}
-
+** >>>>>>>>
 */
 	return nil
 }
