@@ -691,7 +691,8 @@ func (q *QMP) executeCommand(ctx context.Context, name string, args map[string]i
 // other command. Therefore you must call qmp.ExecuteQMPCapabilities() before
 // you execute any other command.
 func QMPStart(ctx context.Context, socket string, cfg QMPConfig, disconnectedCh chan struct{}) (*QMP, *QMPVersion, error) {
-/* MEB: prevent QMP connection: QMPStart()
+/*
+** <<<<<<<< MEB: prevent QMP connection: QMPStart()
 	if cfg.Logger == nil {
 		cfg.Logger = qmpNullLogger{}
 	}
@@ -704,6 +705,7 @@ func QMPStart(ctx context.Context, socket string, cfg QMPConfig, disconnectedCh 
 	}
 
 	return QMPStartWithConn(ctx, conn, cfg, disconnectedCh)
+** >>>>>>>>
 */
         // MEB: return dummy qmp object.
 	var version *QMPVersion = &QMPVersion{
@@ -724,7 +726,8 @@ func QMPStart(ctx context.Context, socket string, cfg QMPConfig, disconnectedCh 
 
 // Same as QMPStart but with a pre-established connection
 func QMPStartWithConn(ctx context.Context, conn net.Conn, cfg QMPConfig, disconnectedCh chan struct{}) (*QMP, *QMPVersion, error) {
-/* MEB: ignore:
+/*
+** <<<<<<<< MEB: ignore:
 	if conn == nil {
 		close(disconnectedCh)
 		return nil, nil, fmt.Errorf("invalid connection")
@@ -751,6 +754,7 @@ func QMPStartWithConn(ctx context.Context, conn net.Conn, cfg QMPConfig, disconn
 	}
 
 	return q, q.version, nil
+** >>>>>>>>
 */
         // MEB: return dummy qmp object.
 	var version *QMPVersion = &QMPVersion{
