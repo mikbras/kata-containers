@@ -421,9 +421,6 @@ async fn virtiofs_storage_handler(
     storage: &Storage,
     _sandbox: Arc<Mutex<Sandbox>>,
 ) -> Result<String> {
-
-    info!(logger, "MIKBRAS: virtiofs_storage_handler()");
-
     common_storage_handler(logger, storage)
 }
 
@@ -579,7 +576,7 @@ fn mount_storage(logger: &Logger, storage: &Storage) -> Result<()> {
     /* MEB: use vsockfs for kataShared mount */
     if source.to_str().unwrap() == "kataShared" {
 
-        info!(logger, "MEB: mounting kataShared with vsocks: MEB");
+        info!(logger, "MEB: mounting kataShared with vsockfs");
 
         let output = Command::new("/sbin/mount.vsockfs")
             .arg("vsock:7777")

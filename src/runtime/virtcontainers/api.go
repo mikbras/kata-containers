@@ -63,8 +63,6 @@ func createSandboxFromConfig(ctx context.Context, sandboxConfig SandboxConfig, f
 		return nil, err
 	}
 
-        s.Logger().Infof("MEB: createSandboxFromConfig()")
-
 	// Cleanup sandbox resources in case of any failure
 	defer func() {
 		if err != nil {
@@ -89,14 +87,10 @@ func createSandboxFromConfig(ctx context.Context, sandboxConfig SandboxConfig, f
 		return nil, err
 	}
 
-        s.Logger().Infof("MEB: createSandboxFromConfig() before")
-
 	// Start the VM
 	if err = s.startVM(ctx, prestartHookFunc); err != nil {
 		return nil, err
 	}
-
-        s.Logger().Infof("MEB: createSandboxFromConfig() after")
 
 	// rollback to stop VM if error occurs
 	defer func() {
@@ -115,8 +109,6 @@ func createSandboxFromConfig(ctx context.Context, sandboxConfig SandboxConfig, f
 	if err = s.createContainers(ctx); err != nil {
 		return nil, err
 	}
-
-        s.Logger().Infof("MEB: createSandboxFromConfig() done")
 
 	return s, nil
 }

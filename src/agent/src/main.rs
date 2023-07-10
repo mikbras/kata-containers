@@ -226,19 +226,6 @@ async fn real_main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     // XXX: Note that *ALL* spans needs to start after this point!!
     let span_guard = root_span.enter();
 
-/*
-    // MEB:
-    info!(logger, "xxx: before connect_console_vsock()");
-    let csocket = connect_console_vsock()?;
-    if let Some(csocket) = csocket {
-        info!(logger, "xxx: _csocket okay");
-        setup_console(csocket)?;
-    } else {
-        info!(logger, "xxx: _csocket bad");
-    }
-    info!(logger, "xxx: after connect_console_vsock()");
-*/
-
     // Start the sandbox and wait for its ttRPC server to end
     start_sandbox(&logger, &config, init_mode, &mut tasks, shutdown_rx.clone()).await?;
 
@@ -363,10 +350,7 @@ async fn start_sandbox(
 ) -> Result<()> {
     let debug_console_vport = config.debug_console_vport as u32;
 
-    info!(logger, "xxx: start_sandbox: {}", debug_console_vport);
-
     if config.debug_console {
-        info!(logger, "xxx: if config.debug_console"); 
         let debug_console_task = tokio::task::spawn(console::debug_console_handler(
             logger.clone(),
             debug_console_vport,
@@ -374,8 +358,6 @@ async fn start_sandbox(
         ));
 
         tasks.push(debug_console_task);
-    } else {
-        info!(logger, "xxx: if !config.debug_console"); 
     }
 
     // Initialize unique sandbox structure.
@@ -426,8 +408,6 @@ fn init_agent_as_init(logger: &Logger, unified_cgroup_hierarchy: bool) -> Result
     unixfs::symlink(Path::new("/dev/pts/ptmx"), Path::new("/dev/ptmx"))?;
 
     unistd::setsid()?;
-
-    info!(logger, "xxx: init_agent_as_init()");
 
     unsafe {
         libc::ioctl(std::io::stdin().as_raw_fd(), libc::TIOCSCTTY, 1);

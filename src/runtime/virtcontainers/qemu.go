@@ -815,7 +815,6 @@ func (q *qemu) setupVirtioMem(ctx context.Context) error {
 		return err
 	}
 
-        q.Logger().Infof("MEB: qmpSetup15");
 	if err = q.qmpSetup(); err != nil {
 		return err
 	}
@@ -957,9 +956,7 @@ func (q *qemu) StartVM(ctx context.Context, timeout int) error {
 		}
 	}()
 
-        /* MEB: creates QMP connection */
-        q.Logger().Infof("MEB: setupEarlyQmpConnection()");
-/*
+/* MEB: do not create new QMP connection:
 	var qmpConn net.Conn
 	qmpConn, err = q.setupEarlyQmpConnection()
 	if err != nil {
@@ -1030,7 +1027,6 @@ func (q *qemu) StartVM(ctx context.Context, timeout int) error {
 }
 
 func (q *qemu) bootFromTemplate() error {
-        q.Logger().Infof("MEB: qmpSetup14");
 	if err := q.qmpSetup(); err != nil {
 		return err
 	}
@@ -1070,9 +1066,7 @@ func (q *qemu) waitVM(ctx context.Context, qmpConn net.Conn, timeout int) error 
 	timeStart := time.Now()
 	for {
 		disconnectCh = make(chan struct{})
-                q.Logger().Infof("MEB: QMPStart1: before");
 		qmp, ver, err = govmmQemu.QMPStartWithConn(q.qmpMonitorCh.ctx, qmpConn, cfg, disconnectCh)
-                q.Logger().Infof("MEB: QMPStart1: after");
 		if err == nil {
 			break
 		}
@@ -1221,7 +1215,6 @@ func (q *qemu) togglePauseSandbox(ctx context.Context, pause bool) error {
 	span, _ := katatrace.Trace(ctx, q.Logger(), "togglePauseSandbox", qemuTracingTags, map[string]string{"sandbox_id": q.id})
 	defer span.End()
 
-        q.Logger().Infof("MEB: qmpSetup12");
 	if err := q.qmpSetup(); err != nil {
 		return err
 	}
@@ -1251,7 +1244,6 @@ func (q *qemu) qmpSetup() error {
 	// Auto-closed by QMPStart().
 	disconnectCh := make(chan struct{})
 
-        q.Logger().Infof("MEB: QMPStart2");
 	qmp, _, err := govmmQemu.QMPStart(q.qmpMonitorCh.ctx, q.qmpMonitorCh.path, cfg, disconnectCh)
 	if err != nil {
 		q.Logger().WithError(err).Error("Failed to connect to QEMU instance")
@@ -1379,7 +1371,6 @@ func (q *qemu) dumpGuestMemory(dumpSavePath string) error {
 	protocol := fmt.Sprintf("file:%s/vmcore-%s.%s", dumpSavePath, time.Now().Format("20060102150405.999"), memoryDumpFormat)
 	q.Logger().Infof("try to dump guest memory to %s", protocol)
 
-        q.Logger().Infof("MEB: qmpSetup11");
 	if err := q.qmpSetup(); err != nil {
 		q.Logger().WithError(err).Error("setup manage QMP failed")
 		return err
@@ -1617,7 +1608,6 @@ func (q *qemu) hotplugAddVhostUserBlkDevice(ctx context.Context, vAttr *config.V
 }
 
 func (q *qemu) hotplugBlockDevice(ctx context.Context, drive *config.BlockDrive, op Operation) error {
-        q.Logger().Infof("MEB: qmpSetup10");
 	if err := q.qmpSetup(); err != nil {
 		return err
 	}
@@ -1641,7 +1631,6 @@ func (q *qemu) hotplugBlockDevice(ctx context.Context, drive *config.BlockDrive,
 }
 
 func (q *qemu) hotplugVhostUserDevice(ctx context.Context, vAttr *config.VhostUserDeviceAttrs, op Operation) error {
-        q.Logger().Infof("MEB: qmpSetup9");
 	if err := q.qmpSetup(); err != nil {
 		return err
 	}
@@ -1737,7 +1726,6 @@ func (q *qemu) qomGetPciPath(qemuID string) (types.PciPath, error) {
 }
 
 func (q *qemu) hotplugVFIODevice(ctx context.Context, device *config.VFIODev, op Operation) (err error) {
-        q.Logger().Infof("MEB: qmpSetup8");
 	if err = q.qmpSetup(); err != nil {
 		return err
 	}
@@ -1991,7 +1979,6 @@ func (q *qemu) hotplugCPUs(vcpus uint32, op Operation) (uint32, error) {
 		return 0, nil
 	}
 
-        q.Logger().Infof("MEB: qmpSetup6");
 	if err := q.qmpSetup(); err != nil {
 		return 0, err
 	}
@@ -2103,7 +2090,6 @@ func (q *qemu) hotplugMemory(memDev *MemoryDevice, op Operation) (int, error) {
 	memLog := q.Logger().WithField("hotplug", "memory")
 
 	memLog.WithField("hotplug-memory-mb", memDev.SizeMB).Debug("requested memory hotplug")
-        q.Logger().Infof("MEB: qmpSetup5");
 	if err := q.qmpSetup(); err != nil {
 		return 0, err
 	}
@@ -2234,7 +2220,6 @@ func (q *qemu) AddDevice(ctx context.Context, devInfo interface{}, devType Devic
 		q.qemuConfig.Devices = q.arch.appendSocket(q.qemuConfig.Devices, v)
 	case types.VSock:
 		q.fds = append(q.fds, v.VhostFd)
-                q.Logger().Infof("MEB: VHOSTFD...")
 		q.qemuConfig.Devices, err = q.arch.appendVSock(ctx, q.qemuConfig.Devices, v)
 	case Endpoint:
 		q.qemuConfig.Devices, err = q.arch.appendNetwork(ctx, q.qemuConfig.Devices, v)
@@ -2268,7 +2253,6 @@ func (q *qemu) GetVMConsole(ctx context.Context, id string) (string, string, err
 func (q *qemu) SaveVM() error {
 	q.Logger().Info("Save sandbox")
 
-        q.Logger().Infof("MEB: qmpSetup4");
 	if err := q.qmpSetup(); err != nil {
 		return err
 	}
@@ -2344,7 +2328,6 @@ func (q *qemu) GetTotalMemoryMB(ctx context.Context) uint32 {
 func (q *qemu) ResizeMemory(ctx context.Context, reqMemMB uint32, memoryBlockSizeMB uint32, probe bool) (uint32, MemoryDevice, error) {
 
 	currentMemory := q.GetTotalMemoryMB(ctx)
-        q.Logger().Infof("MEB: qmpSetup3: ResizeMemory()");
 	if err := q.qmpSetup(); err != nil {
 		return 0, MemoryDevice{}, err
 	}

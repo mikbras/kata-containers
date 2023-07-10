@@ -67,7 +67,6 @@ type dialer func(string, time.Duration) (net.Conn, error)
 //     and AF_VSOCK sockets (on the guest end).
 //   - mock://<path>. just for test use.
 func NewAgentClient(ctx context.Context, sock string, timeout uint32) (*AgentClient, error) {
-        //sock = "vsock://2:10009"
 	grpcAddr, parsedAddr, err := parse(sock)
 	if err != nil {
 		return nil, err

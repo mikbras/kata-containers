@@ -712,7 +712,6 @@ fn do_init_child(cwfd: RawFd) -> Result<()> {
     // notify parent that the child's ready to start
     write_sync(cwfd, SYNC_SUCCESS, "")?;
     log_child!(cfd_log, "ready to run exec");
-    log_child!(cfd_log, "xxx: oci_process.terminal() {}", oci_process.terminal);
     let _ = unistd::close(cfd_log);
     let _ = unistd::close(crfd);
     let _ = unistd::close(cwfd);
@@ -980,8 +979,6 @@ impl BaseContainer for LinuxContainer {
         if !self.console_socket.as_os_str().is_empty() {
             console_name = self.console_socket.clone();
         }
-
-        info!(logger, "xxx: console name: {}!", console_name.display());
 
         let mut child = child
             .arg("init")
@@ -1533,7 +1530,6 @@ impl LinuxContainer {
     #[cfg(feature = "standard-oci-runtime")]
     pub fn set_console_socket(&mut self, console_socket: &Path) -> Result<()> {
         self.console_socket = console_socket.to_path_buf();
-        info!(self.logger, "xxx console_socket: {}", self.console_socket.display());
         Ok(())
     }
 }

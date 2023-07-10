@@ -391,11 +391,9 @@ func (k *kataAgent) internalConfigure(ctx context.Context, h Hypervisor, id stri
 	defer span.End()
 
 	var err error
-        k.Logger().Infof("MEB: GenerateSocket");
 	if k.vmSocket, err = h.GenerateSocket(id); err != nil {
 		return err
 	}
-        /*BOOKMARK*/
 	k.keepConn = config.LongLiveConn
 
 	katatrace.AddTags(span, "socket", k.vmSocket)
@@ -712,31 +710,25 @@ func (k *kataAgent) startSandbox(ctx context.Context, sandbox *Sandbox) error {
 	span, ctx := katatrace.Trace(ctx, k.Logger(), "StartVM", kataAgentTracingTags)
 	defer span.End()
 
-k.Logger().Info("MEB: XXX: TEST8")
-
 	if err := k.setAgentURL(); err != nil {
 		return err
 	}
-k.Logger().Info("MEB: XXX: TEST9")
 
 	hostname := sandbox.config.Hostname
 	if len(hostname) > maxHostnameLen {
 		hostname = hostname[:maxHostnameLen]
 	}
 
-k.Logger().Info("MEB: XXX: TEST9.1")
 	dns, err := k.getDNS(sandbox)
 	if err != nil {
 		return err
 	}
 
-k.Logger().Info("MEB: XXX: TEST9.2")
 	// Check grpc server is serving
         /* ATTN: MEB: fails during check */
 	if err = k.check(ctx); err != nil {
 		return err
 	}
-k.Logger().Info("MEB: XXX: TEST9.3")
 
 /* MEB: ignore to prevent QMP call!
 	// Setup network interfaces and routes
@@ -759,7 +751,6 @@ k.Logger().Info("MEB: XXX: TEST9.3")
 
 	kmodules := setupKernelModules(k.kmodules)
 
-k.Logger().Info("MEB: XXX: TEST10")
 	req := &grpc.CreateSandboxRequest{
 		Hostname:      hostname,
 		Dns:           dns,
@@ -770,12 +761,10 @@ k.Logger().Info("MEB: XXX: TEST10")
 		KernelModules: kmodules,
 	}
 
-k.Logger().Info("MEB: XXX: TEST11")
 	_, err = k.sendReq(ctx, req)
 	if err != nil {
 		return err
 	}
-k.Logger().Info("MEB: XXX: TEST12")
 
 	return nil
 }
@@ -1853,7 +1842,6 @@ func (k *kataAgent) connect(ctx context.Context) error {
                 break
             }
 
-            k.Logger().Infof("MEB: ZZZ: sleeping on kata_agent.addr file")
             time.Sleep(1 * time.Second)
         }
 
@@ -2087,14 +2075,12 @@ func (k *kataAgent) getReqContext(ctx context.Context, reqName string) (newCtx c
 func (k *kataAgent) sendReq(spanCtx context.Context, request interface{}) (interface{}, error) {
 	start := time.Now()
 
-k.Logger().Info("MEB: XXX: TEST13")
 	if err := k.connect(spanCtx); err != nil {
 		return nil, err
 	}
 	if !k.keepConn {
 		defer k.disconnect(spanCtx)
 	}
-k.Logger().Info("MEB: XXX: TEST14")
 
 	msgName := proto.MessageName(request.(proto.Message))
 
@@ -2120,7 +2106,6 @@ k.Logger().Info("MEB: XXX: TEST14")
 	}
 	k.Logger().WithField("name", msgName).WithField("req", message.String()).Trace("sending request")
 
-k.Logger().Info("MEB: XXX: TEST15")
 	defer func() {
 		agentRPCDurationsHistogram.WithLabelValues(msgName).Observe(float64(time.Since(start).Nanoseconds() / int64(time.Millisecond)))
 	}()

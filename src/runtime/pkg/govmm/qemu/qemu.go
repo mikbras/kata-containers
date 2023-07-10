@@ -47,7 +47,7 @@ const (
 // Device is the qemu device interface.
 type Device interface {
 	Valid() bool
-	QemuParams(config *Config, logger QMPLog) []string
+	QemuParams(config *Config) []string
 }
 
 // DeviceDriver is the device driver string.
@@ -312,7 +312,7 @@ func (object Object) Valid() bool {
 }
 
 // QemuParams returns the qemu parameters built out of this Object device.
-func (object Object) QemuParams(config *Config, logger QMPLog) []string {
+func (object Object) QemuParams(config *Config) []string {
 	var objectParams []string
 	var deviceParams []string
 	var driveParams []string
@@ -498,7 +498,7 @@ func (fsdev FSDevice) Valid() bool {
 }
 
 // QemuParams returns the qemu parameters built out of this filesystem device.
-func (fsdev FSDevice) QemuParams(config *Config, logger QMPLog) []string {
+func (fsdev FSDevice) QemuParams(config *Config) []string {
 	var fsParams []string
 	var deviceParams []string
 	var qemuParams []string
@@ -627,7 +627,7 @@ func (cdev CharDevice) Valid() bool {
 }
 
 // QemuParams returns the qemu parameters built out of this character device.
-func (cdev CharDevice) QemuParams(config *Config, logger QMPLog) []string {
+func (cdev CharDevice) QemuParams(config *Config) []string {
 	var cdevParams []string
 	var deviceParams []string
 	var qemuParams []string
@@ -981,7 +981,7 @@ func (netdev NetDevice) QemuNetdevParams(config *Config) []string {
 }
 
 // QemuParams returns the qemu parameters built out of this network device.
-func (netdev NetDevice) QemuParams(config *Config, logger QMPLog) []string {
+func (netdev NetDevice) QemuParams(config *Config) []string {
 	var netdevParams []string
 	var deviceParams []string
 	var qemuParams []string
@@ -1027,7 +1027,7 @@ func (dev LegacySerialDevice) Valid() bool {
 }
 
 // QemuParams returns the qemu parameters built out of this serial device.
-func (dev LegacySerialDevice) QemuParams(config *Config, logger QMPLog) []string {
+func (dev LegacySerialDevice) QemuParams(config *Config) []string {
 	var deviceParam string
 	var qemuParams []string
 
@@ -1082,7 +1082,7 @@ func (dev SerialDevice) Valid() bool {
 }
 
 // QemuParams returns the qemu parameters built out of this serial device.
-func (dev SerialDevice) QemuParams(config *Config, logger QMPLog) []string {
+func (dev SerialDevice) QemuParams(config *Config) []string {
 	var deviceParams []string
 	var qemuParams []string
 
@@ -1208,7 +1208,7 @@ func (blkdev BlockDevice) Valid() bool {
 }
 
 // QemuParams returns the qemu parameters built out of this block device.
-func (blkdev BlockDevice) QemuParams(config *Config, logger QMPLog) []string {
+func (blkdev BlockDevice) QemuParams(config *Config) []string {
 	var blkParams []string
 	var deviceParams []string
 	var qemuParams []string
@@ -1285,7 +1285,7 @@ func (dev PVPanicDevice) Valid() bool {
 }
 
 // QemuParams returns the qemu parameters built out of this serial device.
-func (dev PVPanicDevice) QemuParams(config *Config, logger QMPLog) []string {
+func (dev PVPanicDevice) QemuParams(config *Config) []string {
 	if dev.NoShutdown {
 		return []string{"-device", "pvpanic", "-no-shutdown"}
 	}
@@ -1312,7 +1312,7 @@ func (dev LoaderDevice) Valid() bool {
 }
 
 // QemuParams returns the qemu parameters built out of this loader device.
-func (dev LoaderDevice) QemuParams(config *Config, logger QMPLog) []string {
+func (dev LoaderDevice) QemuParams(config *Config) []string {
 	var qemuParams []string
 	var deviceParams []string
 
@@ -1532,7 +1532,7 @@ func (vhostuserDev VhostUserDevice) QemuFSParams(config *Config) []string {
 }
 
 // QemuParams returns the qemu parameters built out of this vhostuser device.
-func (vhostuserDev VhostUserDevice) QemuParams(config *Config, logger QMPLog) []string {
+func (vhostuserDev VhostUserDevice) QemuParams(config *Config) []string {
 	var qemuParams []string
 	var charParams []string
 	var deviceParams []string
@@ -1612,7 +1612,7 @@ type PCIeRootPortDevice struct {
 }
 
 // QemuParams returns the qemu parameters built out of the PCIeRootPortDevice.
-func (b PCIeRootPortDevice) QemuParams(config *Config, logger QMPLog) []string {
+func (b PCIeRootPortDevice) QemuParams(config *Config) []string {
 	var qemuParams []string
 	var deviceParams []string
 	driver := PCIeRootPort
@@ -1723,7 +1723,7 @@ func (vfioDev VFIODevice) Valid() bool {
 }
 
 // QemuParams returns the qemu parameters built out of this vfio device.
-func (vfioDev VFIODevice) QemuParams(config *Config, logger QMPLog) []string {
+func (vfioDev VFIODevice) QemuParams(config *Config) []string {
 	var qemuParams []string
 	var deviceParams []string
 
@@ -1807,7 +1807,7 @@ func (scsiCon SCSIController) Valid() bool {
 }
 
 // QemuParams returns the qemu parameters built out of this SCSIController device.
-func (scsiCon SCSIController) QemuParams(config *Config, logger QMPLog) []string {
+func (scsiCon SCSIController) QemuParams(config *Config) []string {
 	var qemuParams []string
 	var deviceParams []string
 
@@ -1915,7 +1915,7 @@ func (bridgeDev BridgeDevice) Valid() bool {
 }
 
 // QemuParams returns the qemu parameters built out of this bridge device.
-func (bridgeDev BridgeDevice) QemuParams(config *Config, logger QMPLog) []string {
+func (bridgeDev BridgeDevice) QemuParams(config *Config) []string {
 	var qemuParams []string
 	var deviceParams []string
 	var driver DeviceDriver
@@ -2015,7 +2015,7 @@ func (vsock VSOCKDevice) Valid() bool {
 }
 
 // QemuParams returns the qemu parameters built out of the VSOCK device.
-func (vsock VSOCKDevice) QemuParams(config *Config, logger QMPLog) []string {
+func (vsock VSOCKDevice) QemuParams(config *Config) []string {
 	var deviceParams []string
 	var qemuParams []string
 
@@ -2027,8 +2027,6 @@ func (vsock VSOCKDevice) QemuParams(config *Config, logger QMPLog) []string {
         /* MEB */
 	if vsock.VHostFD != nil {
 		qemuFDs := config.appendFDs([]*os.File{vsock.VHostFD})
-                logger.Infof("MEB: YYY1: VHOSTFD: %d", vsock.VHostFD.Fd())
-                logger.Infof("MEB: YYY2: VHOSTFD: %d", qemuFDs[0])
 		deviceParams = append(deviceParams, fmt.Sprintf("vhostfd=%d", qemuFDs[0]))
 	}
 	deviceParams = append(deviceParams, fmt.Sprintf("id=%s", vsock.ID))
@@ -2094,7 +2092,7 @@ func (v RngDevice) Valid() bool {
 }
 
 // QemuParams returns the qemu parameters built out of the RngDevice.
-func (v RngDevice) QemuParams(config *Config, logger QMPLog) []string {
+func (v RngDevice) QemuParams(config *Config) []string {
 	var qemuParams []string
 
 	//-object rng-random,filename=/dev/hwrng,id=rng0
@@ -2176,7 +2174,7 @@ var BalloonDeviceTransport = map[VirtioTransport]string{
 }
 
 // QemuParams returns the qemu parameters built out of the BalloonDevice.
-func (b BalloonDevice) QemuParams(config *Config, logger QMPLog) []string {
+func (b BalloonDevice) QemuParams(config *Config) []string {
 	var qemuParams []string
 	var deviceParams []string
 
@@ -2241,7 +2239,7 @@ func (dev IommuDev) deviceName() string {
 }
 
 // QemuParams returns the qemu parameters built out of the IommuDev.
-func (dev IommuDev) QemuParams(_ *Config, logger QMPLog) []string {
+func (dev IommuDev) QemuParams(_ *Config) []string {
 	var qemuParams []string
 	var deviceParams []string
 
@@ -2451,7 +2449,7 @@ func (fwcfg FwCfg) Valid() bool {
 }
 
 // QemuParams returns the qemu parameters built out of the FwCfg object
-func (fwcfg FwCfg) QemuParams(config *Config, logger QMPLog) []string {
+func (fwcfg FwCfg) QemuParams(config *Config) []string {
 	var fwcfgParams []string
 	var qemuParams []string
 
@@ -2742,7 +2740,7 @@ func (config *Config) appendDevices(logger QMPLog) {
 			continue
 		}
 
-		config.qemuParams = append(config.qemuParams, d.QemuParams(config, logger)...)
+		config.qemuParams = append(config.qemuParams, d.QemuParams(config)...)
 	}
 }
 
@@ -2986,7 +2984,7 @@ func (config *Config) appendFwCfg(logger QMPLog) {
 			continue
 		}
 
-		config.qemuParams = append(config.qemuParams, f.QemuParams(config, logger)...)
+		config.qemuParams = append(config.qemuParams, f.QemuParams(config)...)
 	}
 }
 
