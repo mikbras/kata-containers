@@ -257,12 +257,14 @@ func CreateContainer(ctx context.Context, sandbox vc.VCSandbox, ociSpec specs.Sp
 		return vc.Process{}, err
 	}
 
-/* MEB: UNDO
+/*
+** <<<<<<<< MEB: UNDO
 	hid, err := sandbox.GetHypervisorPid()
 	if err != nil {
 		return vc.Process{}, err
 	}
 	ctx = context.WithValue(ctx, vc.HypervisorPidKey{}, hid)
+** >>>>>>>>
 */
 
 	// Run pre-start OCI hooks.

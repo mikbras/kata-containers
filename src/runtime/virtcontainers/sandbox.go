@@ -304,8 +304,10 @@ func (s *Sandbox) GetHypervisorPid() (int, error) {
 		return -1, fmt.Errorf("Invalid hypervisor PID: %+v", pids)
 	}
 	return pids[0], nil
-/* MEB:
+/*
+** <<<<<<<< MEB:
         return 99999, nil
+** >>>>>>>>
 */
 }
 
@@ -1208,7 +1210,8 @@ func (s *Sandbox) startVM(ctx context.Context, prestartHookFunc func(context.Con
 
 	s.Logger().Info("Starting VM")
 
-/* MEB: prevent creation of console watcher
+/*
+** <<<<<<<< MEB: prevent creation of console watcher
 	if s.config.HypervisorConfig.Debug {
 
 		// create console watcher
@@ -1218,6 +1221,7 @@ func (s *Sandbox) startVM(ctx context.Context, prestartHookFunc func(context.Con
 		}
 		s.cw = consoleWatcher
 	}
+** >>>>>>>>
 */
 
 	defer func() {
@@ -1245,7 +1249,8 @@ func (s *Sandbox) startVM(ctx context.Context, prestartHookFunc func(context.Con
 		return err
 	}
 
-/* MEB: UNDO
+/*
+** <<<<<<<< MEB: UNDO
 	if prestartHookFunc != nil {
 		hid, err := s.GetHypervisorPid()
 		if err != nil {
@@ -1258,6 +1263,7 @@ func (s *Sandbox) startVM(ctx context.Context, prestartHookFunc func(context.Con
 			return err
 		}
 	}
+** >>>>>>>>
 */
 
 	// 1. Do not scan the netns if we want no network for the vmm.
@@ -2017,7 +2023,8 @@ func (s *Sandbox) AddDevice(ctx context.Context, info config.DeviceInfo) (api.De
 // applicable CPU and memory.
 func (s *Sandbox) updateResources(ctx context.Context) error {
 
-/* MEB: ignore updateResources() to prevent call into QMP:
+/*
+** <<<<<<<< MEB: ignore updateResources() to prevent call into QMP:
 	if s == nil {
 		return errors.New("sandbox is nil")
 	}
@@ -2120,6 +2127,7 @@ func (s *Sandbox) updateResources(ctx context.Context) error {
 		}
 
 	}
+** >>>>>>>>
 */
 	return nil
 

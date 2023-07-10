@@ -730,7 +730,8 @@ func (k *kataAgent) startSandbox(ctx context.Context, sandbox *Sandbox) error {
 		return err
 	}
 
-/* MEB: ignore to prevent QMP call!
+/*
+** <<<<<<<< MEB: ignore to prevent QMP call!
 	// Setup network interfaces and routes
 	interfaces, routes, neighs, err := generateVCNetworkStructures(ctx, sandbox.network)
 	if err != nil {
@@ -745,6 +746,7 @@ func (k *kataAgent) startSandbox(ctx context.Context, sandbox *Sandbox) error {
 	if err = k.addARPNeighbors(ctx, neighs); err != nil {
 		return err
 	}
+** >>>>>>>>
 */
 
 	storages := setupStorages(ctx, sandbox)
