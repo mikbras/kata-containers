@@ -2024,7 +2024,6 @@ func (vsock VSOCKDevice) QemuParams(config *Config) []string {
 	if s := vsock.Transport.disableModern(config, vsock.DisableModern); s != "" {
 		deviceParams = append(deviceParams, s)
 	}
-        /* MEB */
 	if vsock.VHostFD != nil {
 		qemuFDs := config.appendFDs([]*os.File{vsock.VHostFD})
 		deviceParams = append(deviceParams, fmt.Sprintf("vhostfd=%d", qemuFDs[0]))
